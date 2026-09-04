@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Registration | Education Platform</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="auth-page">
+<section class="auth-card register-card">
+<div class="brand">
+<div class="logo-placeholder">EP</div>
+<h1>Education Platform</h1>
+<p>Create your student account</p>
+</div>
+<div class="auth-content">
+<h2>Student Registration</h2>
+<p class="auth-subtitle">Fill in your information to create an account.</p>
+<form id="studentRegisterForm" novalidate>
+<div class="form-group"><label for="studentName">Student Name</label><input type="text" id="studentName" name="studentName" placeholder="Enter student name" autocomplete="name"></div>
+<div class="form-group"><label for="studentMobile">Mobile Number</label><input type="tel" id="studentMobile" name="mobile" placeholder="Enter mobile number" autocomplete="tel"></div>
+<div class="form-group"><label for="studentEmail">Email Address <span class="optional">(Optional)</span></label><input type="email" id="studentEmail" name="email" placeholder="Enter email address" autocomplete="email"></div>
+<div class="form-group"><label for="studentClass">Class</label><select id="studentClass" name="class"><option value="">Select Class</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option><option value="11">Class 11</option><option value="12">Class 12</option></select></div>
+<div class="form-group"><label for="studentPassword">Password</label><div class="password-wrapper"><input type="password" id="studentPassword" name="password" placeholder="Create password" autocomplete="new-password"><button type="button" class="password-toggle" data-password-target="studentPassword" aria-label="Show password">Show</button></div></div>
+<div class="form-group"><label for="confirmPassword">Confirm Password</label><div class="password-wrapper"><input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" autocomplete="new-password"><button type="button" class="password-toggle" data-password-target="confirmPassword" aria-label="Show password">Show</button></div></div>
+<div class="form-group"><label for="guardianName">Guardian Name</label><input type="text" id="guardianName" name="guardianName" placeholder="Enter guardian name"></div>
+<div class="form-group"><label for="guardianMobile">Guardian Mobile</label><input type="tel" id="guardianMobile" name="guardianMobile" placeholder="Enter guardian mobile number"></div>
+<label class="terms-label"><input type="checkbox" id="acceptTerms"><span>I agree to the Terms and Conditions.</span></label>
+<div id="registerMessage" class="auth-message" aria-live="polite"></div>
+<button type="submit" class="btn btn-primary btn-full">CREATE STUDENT ACCOUNT</button>
+</form>
+<div class="back-link"><a href="login.html">&larr; Back to Login</a></div>
+</div>
+<footer class="auth-footer">&copy; <span id="currentYear"></span> Education Platform. All rights reserved.</footer>
+</section>
+</main>
+<script src="js/app.js"></script>
+</body>
+</html>

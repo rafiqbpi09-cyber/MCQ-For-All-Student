@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Login to Education Platform">
+<title>Login | Education Platform</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="auth-page">
+<section class="auth-card">
+<div class="brand">
+<div class="logo-placeholder">EP</div>
+<h1>Education Platform</h1>
+<p>Learn. Grow. Succeed.</p>
+</div>
+<div class="auth-content">
+<h2>Welcome Back</h2>
+<p class="auth-subtitle">Login to continue to your account</p>
+<form id="loginForm" novalidate>
+<div class="form-group">
+<label for="loginIdentifier">Mobile Number or Email</label>
+<input type="text" id="loginIdentifier" name="identifier" placeholder="Enter mobile number or email" autocomplete="username">
+</div>
+<div class="form-group">
+<label for="loginPassword">Password</label>
+<div class="password-wrapper">
+<input type="password" id="loginPassword" name="password" placeholder="Enter password" autocomplete="current-password">
+<button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">Show</button>
+</div>
+</div>
+<div class="login-options">
+<label class="checkbox-label"><input type="checkbox" id="rememberMe"><span>Remember Me</span></label>
+<a href="forgot-password.html">Forgot Password?</a>
+</div>
+<div id="loginMessage" class="auth-message" aria-live="polite"></div>
+<button type="submit" class="btn btn-primary btn-full">LOGIN</button>
+</form>
+<div class="register-link"><span>New Student?</span><a href="student-register.html">Create Account</a></div>
+</div>
+<footer class="auth-footer">&copy; <span id="currentYear"></span> Education Platform. All rights reserved.</footer>
+</section>
+</main>
+<script src="js/app.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>
