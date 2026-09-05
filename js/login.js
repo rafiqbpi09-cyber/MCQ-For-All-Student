@@ -48,7 +48,18 @@ if (form) {
 
       window.location.href = dashboard;
     } catch (error) {
-      showMessage("Invalid mobile number or password.", "error");
+      console.error("Login error:", error.code, error.message);
+      if (error.code === "auth/user-not-found") {
+        showMessage("No account found with this mobile number. (Code: user-not-found)", "error");
+      } else if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+        showMessage("Incorrect password for this mobile number. (Code: wrong-password)", "error");
+      } else if (error.code === "auth/invalid-email") {
+        showMessage("Mobile number format not recognized. (Code: invalid-email)", "error");
+      } else if (error.code === "auth/too-many-requests") {
+        showMessage("Too many attempts. Please wait a moment and try again.", "error");
+      } else {
+        showMessage(`Login failed: ${error.code || error.message}`, "error");
+      }
     } finally {
       submitButton.disabled = false;
     }
