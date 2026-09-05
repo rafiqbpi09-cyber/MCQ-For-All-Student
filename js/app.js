@@ -22,8 +22,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutButton = document.getElementById("logoutButton");
   if (logoutButton) {
     logoutButton.addEventListener("click", () => {
-      sessionStorage.removeItem("epSession");
-      window.location.href = "login.html";
+      if (typeof auth !== "undefined" && auth.signOut) {
+        auth.signOut().finally(() => {
+          window.location.href = "login.html";
+        });
+      } else {
+        window.location.href = "login.html";
+      }
     });
   }
 });
