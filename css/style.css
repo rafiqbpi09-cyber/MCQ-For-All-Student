@@ -38,3 +38,21 @@ button,input,select{font:inherit}
 @media(min-width:480px){.action-group{flex-direction:row}.action-group .btn{flex:1}}
 @media(max-width:480px){.auth-page,.page-center{align-items:flex-start;padding:24px 14px}.auth-card,.welcome-card{padding:25px 20px;border-radius:20px}.auth-content h2{font-size:27px}.login-options{align-items:flex-start}.dashboard-card{padding:22px}.dashboard-header{flex-direction:column;align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.quiz-question-block{padding:18px;border:1px solid var(--border);border-radius:14px;margin-bottom:16px;background:#fbfcfe}
+.quiz-question-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.btn-remove-question{border:0;background:transparent;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px}
+.quiz-options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quiz-options-grid .form-group{margin-bottom:0}
+.quiz-options-grid label{display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:4px;font-weight:700;color:#475467}
+.quiz-question-text{font-size:15px;margin:0 0 12px}
+.quiz-take-options{display:flex;flex-direction:column;gap:8px}
+.quiz-take-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;cursor:pointer}
+.quiz-take-option:hover{background:#f4f7fb}
+.quiz-feedback{margin:10px 0 0;padding:8px 12px;border-radius:8px;font-size:12px;display:none}
+.quiz-feedback.show.correct{display:block;color:var(--success);background:#ecfdf3;border:1px solid #abefc6}
+.quiz-feedback.show.incorrect{display:block;color:var(--danger);background:#fef3f2;border:1px solid #fecdca}
+.quiz-list-card{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px;border:1px solid var(--border);border-radius:14px;margin-bottom:14px;background:#fff}
+.quiz-list-card h3{margin:0 0 4px;font-size:16px}
+.quiz-meta{margin:0 0 4px;font-size:12px;color:var(--muted)}
+.quiz-desc{margin:0;font-size:13px;color:#475467}
+@media(max-width:480px){.quiz-options-grid{grid-template-columns:1fr}.quiz-list-card{flex-direction:column;align-items:flex-start}}
