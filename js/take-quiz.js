@@ -1,42 +1,124 @@
+const params = new URLSearchParams(window.location.search);
+const quizId = params.get("id");
+let currentQuiz = null;
+
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
 
-async function loadQuizzes() {
-  const container = document.getElementById("quizListContainer");
+async function loadQuiz() {
+  const container = document.getElementById("quizQuestionsContainer");
+  const heading = document.getElementById("quizTitleHeading");
+
+  if (!quizId) {
+    container.innerHTML = `<p style="text-align:center;color:var(--danger)">No quiz selected.</p>`;
+    document.getElementById("submitQuizBtn").style.display = "none";
+    return;
+  }
 
   try {
-    const snapshot = await db.collection("quizzes").orderBy("createdAt", "desc").get();
+    const doc = await db.collection("quizzes").doc(quizId).get();
 
-    if (snapshot.empty) {
-      container.innerHTML = `<p style="text-align:center;color:var(--muted)">No quizzes available yet.</p>`;
+    if (!doc.exists) {
+      container.innerHTML = `<p style="text-align:center;color:var(--danger)">Quiz not found.</p>`;
+      document.getElementById("submitQuizBtn").style.display = "none";
       return;
     }
 
-    container.innerHTML = "";
+    currentQuiz = doc.data();
+    heading.textContent = currentQuiz.title || "Quiz";
 
-    snapshot.forEach((doc) => {
-      const quiz = doc.data();
-      const questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
-      const card = document.createElement("div");
-      card.className = "quiz-list-card";
-      card.innerHTML = `
-        <div>
-          <h3>${escapeHtml(quiz.title || "Untitled Quiz")}</h3>
-          <p class="quiz-meta">${questionCount} question${questionCount === 1 ? "" : "s"} &middot; by ${escapeHtml(quiz.createdByName || "Unknown")}</p>
-          ${quiz.description ? `<p class="quiz-desc">${escapeHtml(quiz.description)}</p>` : ""}
-        </div>
-        <a class="btn btn-primary" href="take-quiz.html?id=${doc.id}">Start Quiz</a>
+    container.innerHTML = "";
+    currentQuiz.questions.forEach((q, qIndex) => {
+      const block = document.createElement("div");
+      block.className = "quiz-question-block";
+      block.dataset.qindex = qIndex;
+
+      let optionsHtml = "";
+      q.options.forEach((option, oIndex) => {
+        optionsHtml += `
+          <label class="quiz-take-option">
+            <input type="radio" name="answer-${qIndex}" value="${oIndex}">
+            <span>${escapeHtml(option)}</span>
+          </label>`;
+      });
+
+      block.innerHTML = `
+        <p class="quiz-question-text"><strong>Q${qIndex + 1}.</strong> ${escapeHtml(q.question)}</p>
+        <div class="quiz-take-options">${optionsHtml}</div>
+        <p class="quiz-feedback"></p>
       `;
-      container.appendChild(card);
+      container.appendChild(block);
     });
   } catch (error) {
-    container.innerHTML = `<p style="text-align:center;color:var(--danger)">Could not load quizzes: ${error.code || error.message}</p>`;
+    container.innerHTML = `<p style="text-align:center;color:var(--danger)">Could not load quiz: ${error.code || error.message}</p>`;
+    document.getElementById("submitQuizBtn").style.display = "none";
   }
 }
 
+const form = document.getElementById("takeQuizForm");
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!currentQuiz) return;
+
+  const submitButton = document.getElementById("submitQuizBtn");
+  const blocks = document.querySelectorAll(".quiz-question-block");
+  let score = 0;
+  const answers = [];
+
+  blocks.forEach((block, qIndex) => {
+    const selected = block.querySelector(`input[name="answer-${qIndex}"]:checked`);
+    const selectedIndex = selected ? parseInt(selected.value, 10) : -1;
+    const correctIndex = currentQuiz.questions[qIndex].correctIndex;
+    const isCorrect = selectedIndex === correctIndex;
+
+    if (isCorrect) score++;
+    answers.push(selectedIndex);
+
+    const feedback = block.querySelector(".quiz-feedback");
+    if (selectedIndex === -1) {
+      feedback.textContent = `Not answered. Correct answer: ${currentQuiz.questions[qIndex].options[correctIndex]}`;
+      feedback.className = "quiz-feedback show incorrect";
+    } else if (isCorrect) {
+      feedback.textContent = "Correct!";
+      feedback.className = "quiz-feedback show correct";
+    } else {
+      feedback.textContent = `Incorrect. Correct answer: ${currentQuiz.questions[qIndex].options[correctIndex]}`;
+      feedback.className = "quiz-feedback show incorrect";
+    }
+
+    block.querySelectorAll("input[type='radio']").forEach((input) => (input.disabled = true));
+  });
+
+  const total = currentQuiz.questions.length;
+  const summary = document.getElementById("quizResultSummary");
+  summary.style.display = "block";
+  summary.textContent = `You scored ${score} out of ${total}.`;
+  summary.className = "auth-message show success";
+
+  submitButton.disabled = true;
+  submitButton.textContent = "SUBMITTED";
+
+  try {
+    await db.collection("quizAttempts").add({
+      quizId,
+      quizTitle: currentQuiz.title || "",
+      studentUid: window.EP_CURRENT_USER.uid,
+      studentName: window.EP_CURRENT_USER.name || "",
+      answers,
+      score,
+      total,
+      submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error("Could not save quiz attempt:", error);
+  }
+});
+
 auth.onAuthStateChanged((user) => {
-  if (user) loadQuizzes();
+  if (user) loadQuiz();
 });
