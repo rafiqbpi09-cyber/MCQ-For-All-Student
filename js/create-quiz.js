@@ -17,27 +17,35 @@ function addQuestionBlock() {
       <label>Question Text</label>
       <input type="text" class="q-text" placeholder="Enter the question">
     </div>
+    <label class="quiz-options-label">Options &mdash; select the radio button next to the correct answer</label>
     <div class="quiz-options-grid">
-      <div class="form-group">
-        <label><input type="radio" name="correct-${index}" value="0" checked> Option A (correct)</label>
+      <div class="quiz-option-row correct-option">
+        <input type="radio" name="correct-${index}" value="0" checked>
         <input type="text" class="q-option" data-option="0" placeholder="Option A">
       </div>
-      <div class="form-group">
-        <label><input type="radio" name="correct-${index}" value="1"> Option B</label>
+      <div class="quiz-option-row">
+        <input type="radio" name="correct-${index}" value="1">
         <input type="text" class="q-option" data-option="1" placeholder="Option B">
       </div>
-      <div class="form-group">
-        <label><input type="radio" name="correct-${index}" value="2"> Option C</label>
+      <div class="quiz-option-row">
+        <input type="radio" name="correct-${index}" value="2">
         <input type="text" class="q-option" data-option="2" placeholder="Option C">
       </div>
-      <div class="form-group">
-        <label><input type="radio" name="correct-${index}" value="3"> Option D</label>
+      <div class="quiz-option-row">
+        <input type="radio" name="correct-${index}" value="3">
         <input type="text" class="q-option" data-option="3" placeholder="Option D">
       </div>
     </div>
   `;
 
   container.appendChild(block);
+
+  block.querySelectorAll(".quiz-option-row input[type='radio']").forEach((radio) => {
+    radio.addEventListener("change", () => {
+      block.querySelectorAll(".quiz-option-row").forEach((row) => row.classList.remove("correct-option"));
+      radio.closest(".quiz-option-row").classList.add("correct-option");
+    });
+  });
 
   block.querySelector(".btn-remove-question").addEventListener("click", () => {
     block.remove();
