@@ -18,6 +18,33 @@
 <input type="number" id="quizDuration" min="1" placeholder="e.g. 10">
 </div>
 
+<div class="bulk-import-section">
+<button type="button" id="bulkImportToggleBtn" class="btn btn-secondary btn-full">📄 Bulk Import Questions (Paste Text / TXT / PDF)</button>
+<div id="bulkImportPanel" class="bulk-import-panel" hidden>
+<p class="bulk-import-hint">প্রতিটি প্রশ্ন নিচের ফরম্যাটে লিখুন / Format each question like this:<br>
+<code>1. Question text<br>A) Option 1<br>B) Option 2<br>C) Option 3<br>D) Option 4<br>Answer: B</code><br>
+অপশনের জন্য A-D অথবা ক-ঘ দুটোই চলবে। উত্তর লেখার জন্য Answer: / Ans: / উত্তর: ব্যবহার করুন। &nbsp;
+<a href="#" id="bulkImportSampleLink">Download sample .txt</a>
+</p>
+<div class="form-group">
+<label for="bulkImportFile">Upload PDF or TXT file <span class="optional">(auto-fills the text box below — please review before parsing)</span></label>
+<input type="file" id="bulkImportFile" accept=".pdf,.txt">
+</div>
+<div id="bulkImportFileStatus" class="bulk-import-status"></div>
+<div class="form-group">
+<label for="bulkImportText">Or paste MCQ text directly</label>
+<textarea id="bulkImportText" rows="10" placeholder="1. What is the capital of Bangladesh?
+A) Chittagong
+B) Dhaka
+C) Sylhet
+D) Khulna
+Answer: B"></textarea>
+</div>
+<div id="bulkImportResult" class="bulk-import-status"></div>
+<button type="button" id="bulkImportParseBtn" class="btn btn-primary">Parse &amp; Add Questions</button>
+</div>
+</div>
+
 <div id="questionsContainer"></div>
 
 <button type="button" id="addQuestionBtn" class="btn btn-secondary" style="margin-bottom:20px">+ Add Question</button>
@@ -35,5 +62,6 @@
 <script src="js/app.js"></script>
 <script src="js/dashboard-guard.js"></script>
 <script src="js/create-quiz.js"></script>
+<script src="js/bulk-import.js"></script>
 </body>
 </html>
