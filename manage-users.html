@@ -6,13 +6,38 @@
 <p style="color:var(--muted);font-size:13px;margin-bottom:18px">Change a user's role, or remove their dashboard access if they've forgotten their password (they can be re-created with a new password from the dashboard).</p>
 <div id="usersContainer"><p style="text-align:center;color:var(--muted)">Loading users...</p></div>
 </section></main>
-<script>window.EP_REQUIRED_ROLE = "admin";</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-<script src="js/firebase-config.js"></script>
-<script src="js/auth-helpers.js"></script>
-<script src="js/app.js"></script>
-<script src="js/manage-users.js?v=20260907-4"></script>
-</body>
-</html>
+<script>
+(function(){
+  'use strict';
+  const container=document.getElementById('usersContainer');
+  const config={apiKey:'AIzaSyDM13kU5-lT7DSlsCp2tVCZkMVAymlzHNg',authDomain:'mcq-6to12.firebaseapp.com',projectId:'mcq-6to12',storageBucket:'mcq-6to12.firebasestorage.app',messagingSenderId:'784808401512',appId:'1:784808401512:web:7ab4aaa43f20aeab9739dd'};
+  function esc(v){const d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML;}
+  function out(msg,danger){container.innerHTML='<p style="text-align:center;color:'+(danger?'var(--danger)':'var(--muted)')+'">'+msg+'</p>';}
+  function timeout(p,ms){let t;const x=new Promise((_,r)=>t=setTimeout(()=>r(new Error('TIMEOUT')),ms));return Promise.race([p,x]).finally(()=>clearTimeout(t));}
+  function err(e){if(e&&e.message==='TIMEOUT')return 'Firebase connection timed out. Please check Firebase/Firestore and your internet connection.';return esc(e&&(e.code||e.message)||'Unknown Firebase error');}
+  try{firebase.initializeApp(config);}catch(e){if(!/already exists/i.test(e.message||''))throw e;}
+  const auth=firebase.auth(),db=firebase.firestore();
+  async function load(user){
+    out('Loading users...');
+    try{
+      const me=await timeout(db.collection('users').doc(user.uid).get(),12000);
+      if(!me.exists){out('Your admin profile was not found.',true);return;}
+      if(me.data().role!=='admin'){window.location.href='access-denied.html';return;}
+      const snap=await timeout(db.collection('users').get(),12000);
+      if(snap.empty){out('No users found.');return;}
+      container.innerHTML='';
+      snap.forEach(doc=>{const u=doc.data()||{},row=document.createElement('div');row.className='quiz-list-card';row.innerHTML='<div><h3>'+esc(u.name||'Unnamed')+'</h3><p class="quiz-meta">'+esc(u.mobile||u.email||'')+'</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select class="role-select" data-uid="'+esc(doc.id)+'" style="height:38px;border:1px solid var(--border);border-radius:8px;padding:0 8px">'+['student','teacher','school','coaching','admin'].map(r=>'<option value="'+r+'" '+(u.role===r?'selected':'')+'>'+r+'</option>').join('')+'</select><button type="button" class="btn btn-secondary btn-remove-user" data-uid="'+esc(doc.id)+'" style="color:var(--danger)">Remove Access</button></div>';container.appendChild(row);});
+      container.querySelectorAll('.role-select').forEach(s=>{let old=s.value;s.addEventListener('change',async()=>{const next=s.value;s.disabled=true;try{await timeout(db.collection('users').doc(s.dataset.uid).update({role:next}),12000);old=next;}catch(e){s.value=old;alert('Could not update role: '+err(e));}finally{s.disabled=false;}});});
+      container.querySelectorAll('.btn-remove-user').forEach(b=>{b.addEventListener('click',async()=>{if(!confirm("Remove this user's dashboard access?"))return;b.disabled=true;try{await timeout(db.collection('users').doc(b.dataset.uid).delete(),12000);const row=b.closest('.quiz-list-card');if(row)row.remove();if(!container.querySelector('.quiz-list-card'))out('No users found.');}catch(e){b.disabled=false;alert('Could not remove: '+err(e));}});});
+    }catch(e){out('Could not load users: '+err(e)+'<br><button type="button" class="btn btn-secondary" style="margin-top:10px" onclick="location.reload()">Retry</button>',true);}
+  }
+  if(!window.firebase){out('Firebase SDK did not load. Check the Firebase CDN connection.',true);return;}
+  let started=false;
+  auth.onAuthStateChanged(user=>{if(started)return;if(!user){out('Your login session was not found. Please log in again.',true);return;}started=true;load(user);});
+  setTimeout(()=>{if(!started&&!auth.currentUser)out('Firebase login is still initializing. Please refresh and try again.',true);},8000);
+})();
+</script>
+</body></html>
