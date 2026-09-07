@@ -2,7 +2,7 @@
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Create Quiz | Education Platform</title><link rel="stylesheet" href="css/style.css"></head>
 <body><main class="dashboard-page"><section class="dashboard-card">
-<div class="dashboard-header"><div><span class="dashboard-label">Create</span><h1>Create New Quiz</h1></div><a href="javascript:history.back()" class="btn btn-secondary">Back</a></div>
+<div class="dashboard-header"><div><span class="dashboard-label">Create</span><h1>Create New Quiz</h1></div><a href="index.html" id="backButton" class="btn btn-secondary">Back</a></div>
 
 <form id="createQuizForm" novalidate>
 <div class="form-group">
@@ -13,6 +13,10 @@
 <label for="quizDescription">Description <span class="optional">(optional)</span></label>
 <input type="text" id="quizDescription" placeholder="Short description">
 </div>
+<div class="form-group">
+<label for="quizDuration">Time Limit in Minutes <span class="optional">(optional, leave blank for no limit)</span></label>
+<input type="number" id="quizDuration" min="1" placeholder="e.g. 10">
+</div>
 
 <div id="questionsContainer"></div>
 
@@ -22,7 +26,7 @@
 <button type="submit" class="btn btn-primary btn-full">SAVE QUIZ</button>
 </form>
 </section></main>
-<script>window.EP_REQUIRED_ROLE = ["teacher", "admin"];</script>
+<script>window.EP_REQUIRED_ROLE = ["teacher", "school", "coaching", "admin"];</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
