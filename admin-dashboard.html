@@ -50,5 +50,9 @@
 <script src="js/dashboard-guard.js"></script>
 <script src="js/admin-create-account.js"></script>
 <script src="js/admin-dashboard-stats.js"></script>
+<script>
+/* Inline fallback: keeps statistics live even if the optional stats JS file is missing from a deployment. */
+(function(){if(window.__ADMIN_STATS_FALLBACK__)return;window.__ADMIN_STATS_FALLBACK__=true;var ids=["totalStudents","totalTeachers","totalQuizzes","totalSubmissions","todayActivity"];function v(id,n){var e=document.getElementById(id);if(e){e.classList.remove("is-loading");e.textContent=Number(n).toLocaleString();}}function l(){if(!window.db||!window.auth)return;auth.onAuthStateChanged(function(u){if(!u)return;db.collection("users").where("role","==","student").onSnapshot(function(s){v(ids[0],s.size);});db.collection("users").where("role","==","teacher").onSnapshot(function(s){v(ids[1],s.size);});db.collection("quizzes").onSnapshot(function(s){v(ids[2],s.size);});db.collection("quizAttempts").onSnapshot(function(s){v(ids[3],s.size);});var d=new Date();d.setHours(0,0,0,0);db.collection("quizAttempts").where("submittedAt",">=",firebase.firestore.Timestamp.fromDate(d)).onSnapshot(function(s){v(ids[4],s.size);});});}var t=setInterval(function(){if(window.db&&window.auth){clearInterval(t);l();}},100);})();
+</script>
 </body>
 </html>
