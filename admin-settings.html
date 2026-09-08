@@ -129,7 +129,7 @@
 
   function renderAvatar(){
     avatarEl.innerHTML = currentPhotoURL
-      ? '<img src="'+currentPhotoURL+'" alt="Profile photo">'
+      ? '<img src="'+esc(currentPhotoURL)+'" alt="Profile photo">'
       : esc(initials(currentName));
   }
 
@@ -163,7 +163,8 @@
       document.getElementById('asInfoLastLogin').textContent=formatDate(lastLogin);
 
       document.getElementById('asFullName').value=currentName;
-      document.getElementById('asUsername').value=data.username||data.mobile||'';
+      var usernameFallback=(data.mobile||'').replace(/[^a-zA-Z0-9._-]/g,'');
+      document.getElementById('asUsername').value=data.username||usernameFallback||'';
 
       loadingBox.style.display='none';
       contentBox.style.display='block';
@@ -187,6 +188,8 @@
     submitBtn.disabled=true;
     timeout(db.collection('users').doc(currentUid).update({name:name,username:username}),12000).then(function(){
       currentName=name;
+      document.getElementById('asFullName').value=name;
+      document.getElementById('asUsername').value=username;
       document.getElementById('asDisplayName').textContent=name;
       renderAvatar();
       showMsg('asProfileMessage','Profile updated successfully.','success');
