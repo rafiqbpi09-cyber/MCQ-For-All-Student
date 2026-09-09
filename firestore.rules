@@ -1,34 +1,46 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function currentUser() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function isAdmin() { return signedIn() && currentUser().data.role == "admin" && currentUser().data.status != "inactive"; }
+    function isActiveUser() { return signedIn() && currentUser().data.status != "inactive"; }
+
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow read: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
-      allow update: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
-      allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow read: if isAdmin();
+
+      // Public registration may only create a student profile for the same Auth UID.
+      allow create: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role == "student"
+        && request.resource.data.status != "inactive";
+      // Admin can create any supported role.
+      allow create: if isAdmin()
+        && request.resource.data.role in ["student", "teacher", "school", "coaching", "admin"]
+        && request.resource.data.status != "inactive";
+
+      // Users may edit their own profile fields, but cannot change role/status.
+      allow update: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /quizzes/{quizId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["teacher", "school", "coaching", "admin"];
-      allow update, delete: if request.auth != null &&
-        (resource.data.createdBy == request.auth.uid ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin");
+      allow read: if isActiveUser();
+      allow create: if isActiveUser()
+        && request.resource.data.createdBy == request.auth.uid
+        && currentUser().data.role in ["teacher", "school", "coaching", "admin"];
+      allow update, delete: if isActiveUser()
+        && (resource.data.createdBy == request.auth.uid || isAdmin());
     }
 
     match /quizAttempts/{attemptId} {
-      allow create: if request.auth != null && request.resource.data.studentUid == request.auth.uid;
-      allow read: if request.auth != null &&
-        (resource.data.studentUid == request.auth.uid ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["teacher", "school", "coaching", "admin"]);
+      allow create: if isActiveUser() && request.resource.data.studentUid == request.auth.uid;
+      allow read: if isActiveUser()
+        && (resource.data.studentUid == request.auth.uid
+          || currentUser().data.role in ["teacher", "school", "coaching", "admin"]);
       allow update, delete: if false;
     }
   }

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Teacher Dashboard | Education Platform</title><link rel="stylesheet" href="css/style.css"></head>
-<body><main class="dashboard-page"><section class="dashboard-card"><div class="dashboard-header"><div><span class="dashboard-label">Teacher</span><h1>Teacher Dashboard</h1></div><button type="button" class="btn btn-secondary" id="logoutButton">Logout</button></div><div class="dashboard-placeholder"><h2>Welcome, <span id="dashboardUserName">Teacher</span></h2><p>Teacher dashboard foundation is ready.</p></div><div style="margin-top:18px;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="create-quiz.html" class="btn btn-primary">Create New Quiz</a><a href="quiz-list.html" class="btn btn-secondary">View All Quizzes</a><a href="my-quizzes.html" class="btn btn-secondary">My Quizzes</a><a href="profile.html" class="btn btn-secondary">Edit Profile</a></div></section></main>
-<script>window.EP_REQUIRED_ROLE = "teacher";</script>
+<body><main class="dashboard-page"><section class="dashboard-card role-dashboard-card"><div class="dashboard-header"><div><span class="dashboard-label" id="dashboardRoleLabel">TEACHER</span><h1>Teacher Dashboard</h1></div><button type="button" class="btn btn-secondary" id="logoutButton">Logout</button></div><div class="dashboard-placeholder role-welcome"><h2>Welcome, <span id="dashboardUserName">Teacher</span></h2><p>Your personalized dashboard is ready.</p></div><div id="dashboardStats" class="role-stats-grid"><div class="role-stat-card"><div class="role-stat-value">—</div><div class="role-stat-label">Loading</div></div></div><div class="role-dashboard-grid"><section class="role-panel"><div class="role-panel-head"><h2>Quick Actions</h2><span>Shortcuts</span></div><div class="role-actions"><a href="create-quiz.html" class="btn btn-primary">Create Quiz</a><a href="quiz-list.html" class="btn btn-secondary">All Quizzes</a><a href="my-quizzes.html" class="btn btn-secondary">My Quizzes</a><a href="quiz-results.html" class="btn btn-secondary">Results</a><a href="teacher-profile.html" class="btn btn-secondary">Professional Profile</a></div></section><section class="role-panel"><div class="role-panel-head"><h2>Recent Activity</h2><span>Latest</span></div><div id="dashboardRecentList" class="role-recent-list"><div class="role-empty">Loading activity...</div></div></section></div></section></main><script>window.EP_REQUIRED_ROLE = "teacher";</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/dashboard-guard.js"></script>
+<script src="js/role-dashboard.js"></script>
 </body>
 </html>

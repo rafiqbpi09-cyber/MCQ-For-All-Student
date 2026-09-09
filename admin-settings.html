@@ -84,6 +84,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/auth-helpers.js"></script>
 <script>
 (function(){
   'use strict';
@@ -141,7 +142,8 @@
     timeout(db.collection('users').doc(user.uid).get(),12000).then(function(docSnap){
       if(!docSnap.exists){showFatalError('Your admin profile was not found.');return;}
       var data=docSnap.data()||{};
-      if(data.role!=='admin'){window.location.href='access-denied.html';return;}
+      if(!isActiveUserProfile(data)){await auth.signOut();window.location.href='login.html';return;}
+      if(!hasRolePermission(data.role,'adminSettings')){window.location.href='access-denied.html';return;}
 
       currentName=data.name||'';
       currentPhotoURL=data.photoURL||'';

@@ -3,7 +3,9 @@
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Quiz Results | Education Platform</title><link rel="stylesheet" href="css/style.css"></head>
 <body><main class="dashboard-page"><section class="dashboard-card">
 <div class="dashboard-header"><div><span class="dashboard-label">Results</span><h1 id="quizResultsHeading">Quiz Results</h1></div><a href="quiz-list.html" class="btn btn-secondary">Back to List</a></div>
+<div id="resultsSummary" class="result-summary-grid" style="display:none"></div>
 <div id="resultsContainer"><p style="text-align:center;color:var(--muted)">Loading results...</p></div>
+<div id="answerReview" style="display:none;margin-top:22px"></div>
 </section></main>
 <script>window.EP_REQUIRED_ROLE = ["teacher", "school", "coaching", "admin"];</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -13,95 +15,6 @@
 <script src="js/auth-helpers.js"></script>
 <script src="js/app.js"></script>
 <script src="js/dashboard-guard.js"></script>
-<script>
-(function () {
-  const firebaseConfig = {
-    apiKey: "AIzaSyDM13kU5-lT7DSlsCp2tVCZkMVAymlzHNg",
-    authDomain: "mcq-6to12.firebaseapp.com",
-    projectId: "mcq-6to12",
-    storageBucket: "mcq-6to12.firebasestorage.app",
-    messagingSenderId: "784808401512",
-    appId: "1:784808401512:web:7ab4aaa43f20aeab9739dd"
-  };
-
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const container = document.getElementById("resultsContainer");
-  const heading = document.getElementById("quizResultsHeading");
-  const quizId = new URLSearchParams(window.location.search).get("id");
-
-  function escapeHtml(value) {
-    const div = document.createElement("div");
-    div.textContent = value == null ? "" : String(value);
-    return div.innerHTML;
-  }
-
-  function formatDate(timestamp) {
-    if (!timestamp) return "-";
-    try {
-      return timestamp.toDate ? timestamp.toDate().toLocaleString() : new Date(timestamp).toLocaleString();
-    } catch (_) { return "-"; }
-  }
-
-  function fail(message) {
-    container.innerHTML = '<p style="text-align:center;color:var(--danger)">' + escapeHtml(message) +
-      '<br><button type="button" class="btn btn-secondary" style="margin-top:10px" onclick="location.reload()">Retry</button></p>';
-  }
-
-  async function loadResults(user) {
-    if (!user) {
-      fail("Please log in to view quiz results.");
-      return;
-    }
-    if (!quizId) {
-      fail("Quiz ID is missing.");
-      return;
-    }
-
-    try {
-      const quizDoc = await db.collection("quizzes").doc(quizId).get();
-      if (!quizDoc.exists) {
-        fail("Quiz not found.");
-        return;
-      }
-
-      const quiz = quizDoc.data() || {};
-      heading.textContent = "Results: " + (quiz.title || "Quiz");
-
-      const snapshot = await db.collection("quizAttempts")
-        .where("quizId", "==", quizId)
-        .get();
-
-      if (snapshot.empty) {
-        container.innerHTML = '<p style="text-align:center;color:var(--muted)">No one has taken this quiz yet.</p>';
-        return;
-      }
-
-      const attempts = [];
-      snapshot.forEach(doc => attempts.push({ id: doc.id, ...doc.data() }));
-      attempts.sort((a, b) => {
-        const at = a.submittedAt && a.submittedAt.toMillis ? a.submittedAt.toMillis() : 0;
-        const bt = b.submittedAt && b.submittedAt.toMillis ? b.submittedAt.toMillis() : 0;
-        return bt - at;
-      });
-
-      container.innerHTML = attempts.map(attempt => {
-        const score = Number(attempt.score || 0);
-        const total = Number(attempt.total || 0);
-        const percent = total ? Math.round((score / total) * 100) : 0;
-        return '<div class="quiz-list-card"><div><h3>' +
-          escapeHtml(attempt.studentName || "Student") + '</h3><p class="quiz-meta">Score: ' +
-          score + ' / ' + total + ' (' + percent + '%) &middot; ' +
-          escapeHtml(formatDate(attempt.submittedAt)) + '</p></div></div>';
-      }).join("");
-    } catch (error) {
-      fail("Could not load results: " + (error.code || error.message || "Unknown error"));
-    }
-  }
-
-  auth.onAuthStateChanged(loadResults);
-})();
-</script>
+<script src="js/quiz-results.js"></script>
 </body>
 </html>
