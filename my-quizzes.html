@@ -8,7 +8,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-<script src="js/auth-helpers.js"></script>
 <script>
 (function(){
   'use strict';
@@ -25,8 +24,7 @@
     try{
       const me=await timeout(db.collection('users').doc(user.uid).get(),12000);
       const role=me.exists?(me.data().role||null):null;
-      if(!me.exists || !isActiveUserProfile(me.data())){await auth.signOut();location.href="login.html";return;}
-      if(!hasRolePermission(role,"manageOwnQuizzes")){out('You do not have permission to view quizzes.',true);return;}
+      if(!['teacher','school','coaching','admin'].includes(role)){out('You do not have permission to view quizzes.',true);return;}
       const q=role==='admin'?db.collection('quizzes'):db.collection('quizzes').where('createdBy','==',user.uid);
       const snap=await timeout(q.get(),12000);
       if(snap.empty){out("You haven't created any quizzes yet.");return;}

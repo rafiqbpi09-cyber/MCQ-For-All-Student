@@ -28,14 +28,12 @@
   <div class="as-section">
     <h2 class="as-section-title">Account Overview</h2>
     <div class="as-info-grid">
-      <div class="as-info-item"><p class="as-info-label">Admin ID</p><p class="as-info-value" id="asInfoAdminId">&mdash;</p></div>
       <div class="as-info-item"><p class="as-info-label">Email (Login ID)</p><p class="as-info-value" id="asInfoEmail">&mdash;</p></div>
       <div class="as-info-item"><p class="as-info-label">Phone</p><p class="as-info-value" id="asInfoPhone">&mdash;</p></div>
       <div class="as-info-item"><p class="as-info-label">Role &amp; Access Level</p><p class="as-info-value" id="asInfoRole">&mdash;</p></div>
       <div class="as-info-item"><p class="as-info-label">Account Status</p><p class="as-info-value" id="asInfoStatus">&mdash;</p></div>
       <div class="as-info-item"><p class="as-info-label">Account Created</p><p class="as-info-value" id="asInfoCreated">&mdash;</p></div>
       <div class="as-info-item"><p class="as-info-label">Last Login</p><p class="as-info-value" id="asInfoLastLogin">&mdash;</p></div>
-      <div class="as-info-item"><p class="as-info-label">Security</p><p class="as-info-value" id="asInfoSecurity">&mdash;</p></div>
     </div>
   </div>
 
@@ -72,7 +70,6 @@
       </div>
       <div id="asPasswordMessage" class="auth-message" aria-live="polite"></div>
       <button type="submit" class="btn btn-primary btn-full">CHANGE PASSWORD</button>
-      <button type="button" class="btn btn-secondary btn-full" id="asLogoutBtn" style="margin-top:10px">SIGN OUT ADMIN</button>
     </form>
   </div>
 
@@ -84,7 +81,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-<script src="js/auth-helpers.js"></script>
 <script>
 (function(){
   'use strict';
@@ -142,8 +138,7 @@
     timeout(db.collection('users').doc(user.uid).get(),12000).then(function(docSnap){
       if(!docSnap.exists){showFatalError('Your admin profile was not found.');return;}
       var data=docSnap.data()||{};
-      if(!isActiveUserProfile(data)){await auth.signOut();window.location.href='login.html';return;}
-      if(!hasRolePermission(data.role,'adminSettings')){window.location.href='access-denied.html';return;}
+      if(data.role!=='admin'){window.location.href='access-denied.html';return;}
 
       currentName=data.name||'';
       currentPhotoURL=data.photoURL||'';
@@ -152,7 +147,6 @@
       document.getElementById('asDisplaySub').textContent=capitalize(data.role)+' Account';
       renderAvatar();
 
-      document.getElementById('asInfoAdminId').textContent=user.uid||'\u2014';
       document.getElementById('asInfoEmail').textContent=user.email||'\u2014';
       document.getElementById('asInfoPhone').textContent=data.mobile||'\u2014';
       document.getElementById('asInfoRole').textContent=capitalize(data.role)+' \u00b7 Full Access';
@@ -167,7 +161,6 @@
 
       var lastLogin=(user.metadata&&user.metadata.lastSignInTime)?new Date(user.metadata.lastSignInTime):null;
       document.getElementById('asInfoLastLogin').textContent=formatDate(lastLogin);
-      document.getElementById('asInfoSecurity').innerHTML=user.emailVerified ? '<span class="as-badge active">Email Verified</span>' : '<span class="as-badge inactive">Email Not Verified</span>';
 
       document.getElementById('asFullName').value=currentName;
       document.getElementById('asUsername').value=data.username||data.mobile||'';
@@ -236,16 +229,6 @@
       }
     }).finally(function(){
       submitBtn.disabled=false;
-    });
-  });
-
-  // ---- Admin sign out ----
-  document.getElementById('asLogoutBtn').addEventListener('click', function(){
-    if(!confirm('Sign out from the admin account?'))return;
-    this.disabled=true;
-    auth.signOut().then(function(){window.location.href='login.html';}).catch(function(e){
-      showMsg('asPasswordMessage','Could not sign out: '+err(e),'error');
-      document.getElementById('asLogoutBtn').disabled=false;
     });
   });
 
