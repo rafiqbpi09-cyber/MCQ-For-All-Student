@@ -4,11 +4,21 @@
 <body><main class="dashboard-page"><section class="dashboard-card">
 <div class="dashboard-header"><div><span class="dashboard-label">Admin</span><h1>Manage Users</h1></div><a href="admin-dashboard.html" class="btn btn-secondary">Back</a></div>
 <p style="color:var(--muted);font-size:13px;margin-bottom:18px">Change a user's role, or remove their dashboard access if they've forgotten their password (they can be re-created with a new password from the dashboard).</p>
+<div id="unlockMobileBox" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:18px">
+  <p style="margin:0 0 10px;font-size:13px;font-weight:700">Mobile number stuck as "Already Account Exists"?</p>
+  <p style="margin:0 0 10px;color:var(--muted);font-size:12px">If this mobile number was used on an account that was removed before this fix, its login can be left behind even though the user no longer appears above. Enter the mobile number to check and free it up. This will refuse to touch a number that still has an active account.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <input type="text" id="unlockMobileInput" placeholder="Mobile number" style="flex:1;min-width:180px;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:10px;outline:none">
+    <button type="button" class="btn btn-secondary" id="unlockMobileBtn">Check &amp; Free Up</button>
+  </div>
+  <p id="unlockMobileMessage" class="auth-message" style="margin-top:10px"></p>
+</div>
 <div id="usersContainer"><p style="text-align:center;color:var(--muted)">Loading users...</p></div>
 </section></main>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-functions-compat.js"></script>
 <script>
 (function(){
   'use strict';
@@ -19,7 +29,7 @@
   function timeout(p,ms){let t;const x=new Promise((_,r)=>t=setTimeout(()=>r(new Error('TIMEOUT')),ms));return Promise.race([p,x]).finally(()=>clearTimeout(t));}
   function err(e){if(e&&e.message==='TIMEOUT')return 'Firebase connection timed out. Please check Firebase/Firestore and your internet connection.';return esc(e&&(e.code||e.message)||'Unknown Firebase error');}
   try{firebase.initializeApp(config);}catch(e){if(!/already exists/i.test(e.message||''))throw e;}
-  const auth=firebase.auth(),db=firebase.firestore();
+  const auth=firebase.auth(),db=firebase.firestore(),fns=firebase.app().functions();
   async function load(user){
     out('Loading users...');
     try{
@@ -32,9 +42,24 @@
       snap.forEach(doc=>{const u=doc.data()||{},row=document.createElement('div');row.className='quiz-list-card';const status=String(u.status||'active').toLowerCase()==='inactive'?'inactive':'active';const statusLabel=status==='active'?'Active':'Inactive';const statusBtn=status==='active'?'Set Inactive':'Set Active';row.innerHTML='<div><h3>'+esc(u.name||'Unnamed')+'</h3><p class="quiz-meta">'+esc(u.mobile||u.email||'')+'</p><span class="user-status-badge" style="display:inline-block;margin-top:6px;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:700;background:'+(status==='active'?'#dcfce7':'#fee2e2')+';color:'+(status==='active'?'#166534':'#991b1b')+'">'+statusLabel+'</span></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select class="role-select" data-uid="'+esc(doc.id)+'" style="height:38px;border:1px solid var(--border);border-radius:8px;padding:0 8px">'+['student','teacher','school','coaching','admin'].map(r=>'<option value="'+r+'" '+(u.role===r?'selected':'')+'>'+r+'</option>').join('')+'</select><button type="button" class="btn btn-secondary btn-toggle-status" data-uid="'+esc(doc.id)+'" data-status="'+status+'">'+statusBtn+'</button><button type="button" class="btn btn-secondary btn-remove-user" data-uid="'+esc(doc.id)+'" style="color:var(--danger)">Remove Access</button></div>';container.appendChild(row);});
       container.querySelectorAll('.role-select').forEach(s=>{let old=s.value;s.addEventListener('change',async()=>{const next=s.value;s.disabled=true;try{await timeout(db.collection('users').doc(s.dataset.uid).update({role:next}),12000);old=next;}catch(e){s.value=old;alert('Could not update role: '+err(e));}finally{s.disabled=false;}});});
       container.querySelectorAll('.btn-toggle-status').forEach(b=>{b.addEventListener('click',async()=>{const next=b.dataset.status==='active'?'inactive':'active';if(b.dataset.uid===user.uid&&next==='inactive'){alert('You cannot deactivate your own admin account.');return;}if(!confirm('Set this account to '+next+'?'))return;b.disabled=true;try{await timeout(db.collection('users').doc(b.dataset.uid).update({status:next}),12000);b.dataset.status=next;b.textContent=next==='active'?'Set Inactive':'Set Active';const badge=b.closest('.quiz-list-card').querySelector('.user-status-badge');badge.textContent=next==='active'?'Active':'Inactive';badge.style.background=next==='active'?'#dcfce7':'#fee2e2';badge.style.color=next==='active'?'#166534':'#991b1b';}catch(e){alert('Could not update status: '+err(e));}finally{b.disabled=false;}});});
-      container.querySelectorAll('.btn-remove-user').forEach(b=>{b.addEventListener('click',async()=>{if(!confirm("Remove this user's dashboard access?"))return;b.disabled=true;try{await timeout(db.collection('users').doc(b.dataset.uid).delete(),12000);const row=b.closest('.quiz-list-card');if(row)row.remove();if(!container.querySelector('.quiz-list-card'))out('No users found.');}catch(e){b.disabled=false;alert('Could not remove: '+err(e));}});});
+      container.querySelectorAll('.btn-remove-user').forEach(b=>{b.addEventListener('click',async()=>{if(!confirm("Remove this user's dashboard access?\n\nThis deletes both their login and their profile, so their mobile number becomes free for a new account."))return;b.disabled=true;try{await timeout(fns.httpsCallable('adminDeleteUser')({uid:b.dataset.uid}),20000);const row=b.closest('.quiz-list-card');if(row)row.remove();if(!container.querySelector('.quiz-list-card'))out('No users found.');}catch(e){b.disabled=false;alert('Could not remove: '+err(e));}});});
     }catch(e){out('Could not load users: '+err(e)+'<br><button type="button" class="btn btn-secondary" style="margin-top:10px" onclick="location.reload()">Retry</button>',true);}
   }
+  const unlockBtn=document.getElementById('unlockMobileBtn'),unlockInput=document.getElementById('unlockMobileInput'),unlockMsg=document.getElementById('unlockMobileMessage');
+  function unlockMsgShow(text,type){unlockMsg.innerHTML=text;unlockMsg.className='auth-message show '+type;}
+  if(unlockBtn){unlockBtn.addEventListener('click',async()=>{
+    const mobile=(unlockInput.value||'').trim();
+    if(!mobile){unlockMsgShow('Enter a mobile number first.','error');return;}
+    unlockBtn.disabled=true;unlockMsgShow('Checking...','success');
+    try{
+      const res=await timeout(fns.httpsCallable('adminCleanupOrphanedMobile')({mobile}),20000);
+      const result=res.data||{};
+      if(!result.found){unlockMsgShow('No login found for that mobile number - it is already free to use for a new account.','success');}
+      else if(result.orphan&&result.cleaned){unlockMsgShow('Found a leftover login with no profile and removed it. This mobile number can now be used to register a new account.','success');}
+      else{unlockMsgShow('This mobile number is linked to an active account, so it was left untouched. Use "Remove Access" in the list above if you want to remove it.','error');}
+    }catch(e){unlockMsgShow('Could not check: '+err(e),'error');}
+    finally{unlockBtn.disabled=false;}
+  });}
   if(!window.firebase){out('Firebase SDK did not load. Check the Firebase CDN connection.',true);return;}
   let started=false;
   auth.onAuthStateChanged(user=>{if(started)return;if(!user){out('Your login session was not found. Please log in again.',true);return;}started=true;load(user);});
